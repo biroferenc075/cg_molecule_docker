@@ -1,5 +1,5 @@
 //=============================================================================================
-// Mintaprogram: Zöld háromszög. Ervenyes 2019. osztol.
+// Mintaprogram: ZÃ¶ld hÃ¡romszÃ¶g. Ervenyes 2019. osztol.
 //
 // A beadott program csak ebben a fajlban lehet, a fajl 1 byte-os ASCII karaktereket tartalmazhat, BOM kihuzando.
 // Tilos:
@@ -18,7 +18,7 @@
 //
 // NYILATKOZAT
 // ---------------------------------------------------------------------------------------------
-// Nev    : Biró Ferenc
+// Nev    : BirÃ³ Ferenc
 // Neptun : HR4VCG
 // ---------------------------------------------------------------------------------------------
 // ezennel kijelentem, hogy a feladatot magam keszitettem, es ha barmilyen segitseget igenybe vettem vagy
@@ -33,7 +33,6 @@
 //=============================================================================================
 #include "framework.h"
 
-// vertex shader in GLSL: It is a Raw string (C++11) since it contains new line characters
 const char * const vertexSourceWorld = R"(
 	#version 330				// Shader 3.3
 	precision highp float;		// normal floats, makes no difference on desktop computers
@@ -47,8 +46,7 @@ const char * const vertexSourceWorld = R"(
         float w = sqrt(e.x*e.x+e.y*e.y)+1;
         vec4 h = vec4(e.x, e.y, 0, 1);
 
-		gl_Position = vec4(h.x/(w+1), h.y/(w+1), 0, 1);		// transform vp from modeling space to normalized device space
-        //gl_Position = vec4(vp.x, vp.y, 0,1) * MVP;
+	gl_Position = vec4(h.x/(w+1), h.y/(w+1), 0, 1);		// transform vp from modeling space to normalized device space
         vColor = vc;
 }
 )";
@@ -67,7 +65,6 @@ const char * const vertexSourceCircle = R"(
 }
 )";
 
-// fragment shader in GLSL
 const char * const fragmentSource = R"(
 	#version 330			// Shader 3.3
 	precision highp float;	// normal floats, makes no difference on desktop computers
@@ -82,14 +79,14 @@ const char * const fragmentSource = R"(
 
 GPUProgram worldProgram; // vertex and fragment shaders
 GPUProgram circleProgram;
-unsigned int vao;	   // virtual world on the GPU
+unsigned int vao;	 
 
 const float mH = 1.67E-27; // kg
 const float cE = 1.6E-19;  // c
 const float k = 9E9 ;      // Nm^2/c^2
 const float vW = 1.0E-3;     // N*s/m
 const float distC = 1E-9;   // m
-const float cFC = -0.0138;//-3.45; //
+const float cFC = -0.0138;
 const float airResC = 0.05f;
 const float tC = 1E-2;  //s
 const int maxMass = 10;
@@ -124,7 +121,6 @@ typedef struct Vertex {
         col = (0, 0, 0);
     }
     void move(vec2 d) {
-        //printf("%f %f -> %f %f\n",pos.x, pos.y, vec2(pos+d).x, vec2(pos+d).y);
         pos=pos+d;
     }
     void rot(float a, vec2 o) {
@@ -145,7 +141,6 @@ typedef struct Atom {
     Vertex vertex = Vertex();
 
     void move(vec2 d) {
-        //printf("%f\n", d.x);
         vertex.move(d);
         for(int i = 0; i < children.size(); i++)
             children[i]->move(d);
@@ -206,7 +201,6 @@ typedef struct Molecule {
     float aVel = 0;
     void calcMOI() {
         MOI=root->calcMOI(0,COM);
-        //printf("%f \n", MOI);
     }
 } Molecule;
 
@@ -215,12 +209,10 @@ std::vector<Vertex> plate = std::vector<Vertex>();
 Vertex* vertices;
 std::vector<Molecule*> mols = std::vector<Molecule*>();
 Molecule* mol;
-//https://hu.wikipedia.org/wiki/Pr%C3%BCfer-k%C3%B3d Prüfer-kódból fa 1. módszer pszeudókód alapján
+//https://hu.wikipedia.org/wiki/Pr%C3%BCfer-k%C3%B3d PrÃ¼fer-kÃ³dbÃ³l fa 1. mÃ³dszer pszeudÃ³kÃ³d alapjÃ¡n
 void generateMolecule(Molecule& res) {
     try {
-        //printf("begin");
         int atomNum = rand() % 6 + 2;
-        //printf("#%d\n", atomNum);
         int sumCharge = 0;
         int sumMass = 0;
         Atom **atoms = new Atom *[atomNum];
@@ -247,7 +239,6 @@ void generateMolecule(Molecule& res) {
             res.atoms.push_back(atoms[i]);
         }
         if(atomNum > 3) {
-            //printf("hey!\n");
             int indices[2 * (atomNum - 2)+1];
             for (int i = 0; i < atomNum - 2; i++) {
                 indices[i] = rand() % atomNum;
@@ -267,14 +258,8 @@ void generateMolecule(Molecule& res) {
                     }
                 } while (!foundMin);
                 indices[atomNum - 1 + i] = min;
-                /*for(int l = 0; l < i; l++) {
-                    printf("  ");
-                }
-                for(int k = i; k < atomNum-1+i; k++) {
-                    printf("%d ", indices[k]);
-                }*/
+               
                 atoms[indices[i]]->children.push_back(atoms[min]);
-                //printf("\t%d -> %d\n", indices[i], min);
                 atoms[min]->parent = atoms[indices[i]];
                 res.edgeVertices.push_back(Vertex(vec2(atoms[indices[i]]->vertex.pos.x, atoms[indices[i]]->vertex.pos.y), lineColor));
                 res.edgeVertices.push_back(Vertex(vec2(atoms[min]->vertex.pos.x, atoms[min]->vertex.pos.y), lineColor));
@@ -283,17 +268,15 @@ void generateMolecule(Molecule& res) {
         else {
             for(int i = 0; i < atomNum-1; i++) {
                 atoms[i]->children.push_back(atoms[i+1]);
-                //printf("%d -> %d\n", i, i+1);
                 atoms[i+1]->parent = atoms[i];
                 res.edgeVertices.push_back(Vertex(vec2(atoms[i]->vertex.pos.x, atoms[i]->vertex.pos.y), lineColor));
                 res.edgeVertices.push_back(Vertex(vec2(atoms[i + 1]->vertex.pos.x, atoms[i + 1]->vertex.pos.y), lineColor));
             }
         }
         res.root = atoms[0];
-        //printf("xd\n", atomNum);
     }
     catch (std::bad_alloc & exc) {
-        printf("hmm");
+        printf("bad alloc");
     }
 }
 
@@ -302,7 +285,6 @@ void generateCircleVertices(Molecule& mol) {
     std::vector<Vertex> centres = mol.vertices;
     for(int i = 0; i < centres.size(); i++) {
         vec3 centreCol = centres[i].col;
-        //printf("%f %f %f\n", centreCol.x, centreCol.y, centreCol.z);
         vec2 centrePos = centres[i].pos;
         mol.cirVertices.push_back(Vertex(centrePos, centreCol));
         for(int n = 0; n <= cRes; n++) {
@@ -318,10 +300,7 @@ void InterpolateLines(Molecule& mol) {
         Vertex v1 = mol.edgeVertices[2 * i];
         Vertex v2 = mol.edgeVertices[2 * i + 1];
         for(int n = 0; n <= lRes; n++) {
-            //vec3 lineColor = vec3((float)n/lRes,0.5*(float)n/lRes,1-(float)n/lRes);
             Vertex resV1 = Vertex((float) n/lRes*v2.pos + (1-(float)n/lRes)*v1.pos,lineColor);
-            //Vertex resV2 = Vertex((float) (n+1)/lRes*v2.pos + (1-(float)(n+1)/lRes)*v1.pos,lineColor);
-            //temp.push_back(resV2);
             temp.push_back(resV1);
         }
     }
@@ -334,13 +313,11 @@ void generatePlate() {
         vec2 delta = vec2(sinf(2.0f*M_PI*(float)n/pRes),cosf(2.0f*M_PI*(float)n/pRes));
         Vertex v = Vertex(centrePos+delta,circleColor);
         plate.push_back(v);
-        //printf("%f %f\n",v.pos.x,v.pos.y);
     }
 }
 void reGenVertices() {
     verticesVec = std::vector<Vertex>();
     Molecule* mol1 = mols[0];
-    //mol1->vel=vec2(-1.0,-1.0);
     Molecule* mol2 = mols[1];
     verticesVec.insert(verticesVec.end(), plate.begin(),plate.end());
     verticesVec.insert(verticesVec.end(), mol1->edgeVertices.begin(), mol1->edgeVertices.end());
@@ -358,7 +335,6 @@ void newAtoms() {
 
     Molecule* mol1 = new Molecule();
     generateMolecule(*mol1);
-    //mol1->vel = vec2(-1.0,-1.0);
     generateCircleVertices(*mol1);
     InterpolateLines(*mol1);
     mol1->move(vec2(2,2));
@@ -387,13 +363,10 @@ void newAtoms() {
 }
 vec2 calcCoulombForce(Atom a1, Atom a2, vec2 d) {
     vec2 res = k*normalize(d)*((a1.charge*a2.charge*pow(cE,2))/pow(length(d)*distC,2));
-    printf("%f %f C\n", res.x, res.y);
     return res;
 }
 vec2 calcAirResistance(Atom a1, vec2 vel, float aVel, vec2 o) {
     vec2 res = (o*aVel+vel)*distC*vW*-1.0;
-    //printf("xd");
-    printf("%f %f R\n", res.x, res.y);
     return res;
 }
 float calcTorque(vec2 v, vec2 F) {
@@ -419,7 +392,6 @@ void Physics(float dT) {
             Atom a = *mol.atoms[j];
             vec2 sumForce = vec2(0,0);
             float sumTorque = 0;
-            //printf("airrse!!!!");
             for(int k = 0; k < mols.size(); k++) {
                 if(i==k) {
                     continue;
@@ -429,22 +401,17 @@ void Physics(float dT) {
                     for(int l = 0; l < molIn.atoms.size(); l++) {
                       Atom aIn = *molIn.atoms[l];
                       vec2 d = a.relPos(aIn);
-                      //printf("%f %f\n",d.x, d.y);
                       sumForce = sumForce + calcCoulombForce(a, aIn, d);
-                      //10.0*vec2(2*(i%2)-1,2*(i%2)-1)
                     }
                 }
             }
-            sumForce = sumForce + calcAirResistance(a, mol.vel, mol.aVel, mol.relPos(a));   //TODO calc moving and rotating parts of force
-            //sumForceMove += sumForce mozgató
-            //sumTorque = sumTorque forgató + atom pozi;
-            //printf("%f\n", sumTorque);
+            sumForce = sumForce + calcAirResistance(a, mol.vel, mol.aVel, mol.relPos(a));
+      
         }
 
         dV.push_back(sumForceMove/(mH*mol.mass)*dT);
         dO.push_back(sumTorque/(mH*mol.MOI)*dT);
         dO.push_back(sumTorque/(mH*mol.MOI)*dT);
-        printf("%f F\n", dO.back());
     }
     for(int i = 0; i < dV.size(); i++) {
         Molecule* mol = mols[i];
@@ -452,12 +419,7 @@ void Physics(float dT) {
         mol->vel=mol->vel+dV[i];
         mol->rot(mol->aVel*dT);
         mol->aVel=mol->aVel+dO[i];
-        //mol->move(vec2(1.0,1.0));
-
-        //printf("%f %f %f %f\n", mol.vel.x, mol.vel.y, dV[i].x, dV[i].y);
-
-        //mol.rot(mol.aVel*dT);
-       // mol.aVel=mol.aVel+dO[i];
+        
     }
 }
 
@@ -480,7 +442,7 @@ void onInitialization() {
 
 	glBufferData(GL_ARRAY_BUFFER,
                  // Copy to GPU target
-		sizeof(float)*5*(size),//+plate.size()), //sizeof(mol->numEdges*sizeof(float)*4),  // # bytes
+		sizeof(float)*5*(size), // # bytes
 		vertices,	      	// address
 		GL_DYNAMIC_DRAW);	// we do not change later
 
@@ -574,7 +536,6 @@ void onMouseMotion(int pX, int pY) {	// pX, pY are the pixel coordinates of the 
 	// Convert to normalized device space
 	float cX = 2.0f * pX / windowWidth - 1;	// flip y axis
 	float cY = 1.0f - 2.0f * pY / windowHeight;
-	//printf("Mouse moved to (%3.2f, %3.2f)\n", cX, cY);
 }
 
 // Mouse click event
@@ -588,13 +549,6 @@ void onMouse(int button, int state, int pX, int pY) { // pX, pY are the pixel co
 	case GLUT_DOWN: buttonStat = "pressed"; break;
 	case GLUT_UP:   buttonStat = "released"; break;
 	}
-/*
-	switch (button) {
-	case GLUT_LEFT_BUTTON:   printf("Left button %s at (%3.2f, %3.2f)\n", buttonStat, cX, cY);   break;
-	case GLUT_MIDDLE_BUTTON: printf("Middle button %s at (%3.2f, %3.2f)\n", buttonStat, cX, cY); break;
-	case GLUT_RIGHT_BUTTON:  printf("Right button %s at (%3.2f, %3.2f)\n", buttonStat, cX, cY);  break;
-	}
-*/
  }
 
 // Idle event indicating that some time elapsed: do animation here
@@ -602,7 +556,6 @@ long prevTime = 0;
 void onIdle() {
 	long time = glutGet(GLUT_ELAPSED_TIME); // elapsed time since the start of the program
     float dT = (time-prevTime)/1000.0f;
-    //printf("%f\n", dT);
     prevTime = time;
     Physics((float)dT);
     reGenVertices();
