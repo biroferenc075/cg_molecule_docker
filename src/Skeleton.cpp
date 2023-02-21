@@ -129,7 +129,6 @@ typedef struct Vertex {
         vec2 d = pos-o;
         vec4 rot = vec4(d.x, d.y,0,0)*mat4(c,s,0,0,-s,c,0,0,0,0,1,0,0,0,0,1);
         pos = vec2(rot.x, rot.y)+o;
-        //pos = ();
     }
 };
 
@@ -276,7 +275,7 @@ void generateMolecule(Molecule& res) {
         res.root = atoms[0];
     }
     catch (std::bad_alloc & exc) {
-        printf("bad alloc");
+        printf("exception caught");
     }
 }
 
@@ -372,13 +371,6 @@ vec2 calcAirResistance(Atom a1, vec2 vel, float aVel, vec2 o) {
 float calcTorque(vec2 v, vec2 F) {
     vec3 res =  cross(v*distC,F);
     return res.z;
-}
-vec2 getParallel(vec2 v1, vec2 v2) {
-
-}
-
-vec2 getPerpendicular(vec2 v1, vec2 v2) {
-
 }
 void Physics(float dT) {
     std::vector<vec2> dV = std::vector<vec2>();
